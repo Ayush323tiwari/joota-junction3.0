@@ -11,6 +11,7 @@ import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
 import ProductCard from '../components/ProductCard';
 import { motion } from 'framer-motion';
+import { API_URL } from '../config';
 
 const ProductDetails: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
@@ -30,7 +31,7 @@ const ProductDetails: React.FC = () => {
   const { data: reviewsData, isLoading: reviewsLoading } = useQuery({
     queryKey: ['reviews', productId],
     queryFn: async () => {
-      const response = await fetch(`http://localhost:5001/api/reviews/${productId}`);
+      const response = await fetch(`${API_URL}/api/reviews/${productId}`);
       const data = await response.json();
       return data.reviews || [];
     },
@@ -148,7 +149,7 @@ const ProductDetails: React.FC = () => {
           {/* Main Image */}
           <div className="relative w-full h-[300px] md:h-[400px] bg-gray-100 rounded-lg overflow-hidden">
             <img
-              src={product.images[selectedImage]?.startsWith('/uploads/products') ? `http://localhost:5001${product.images[selectedImage]}` : product.images[selectedImage]}
+              src={product.images[selectedImage]?.startsWith('/uploads/products') ? `${API_URL}${product.images[selectedImage]}` : product.images[selectedImage]}
               alt={product.name}
               className="w-full h-full object-contain"
             />
@@ -337,7 +338,7 @@ const ProductDetails: React.FC = () => {
                 <Link to={`/product/${product._id || product.id}`}>
                   <div className="relative aspect-square">
                     <img
-                      src={product.images[0]?.startsWith('/uploads/products') ? `http://localhost:5001${product.images[0]}` : product.images[0]}
+                      src={product.images[0]?.startsWith('/uploads/products') ? `${API_URL}${product.images[0]}` : product.images[0]}
                       alt={product.name}
                       className="w-full h-full object-contain p-4"
                     />

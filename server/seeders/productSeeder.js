@@ -1,6 +1,6 @@
+require('dotenv').config();
 const mongoose = require('mongoose');
 const Product = require('../models/Product');
-require('dotenv').config();
 
 const products = [
   // RUNNING SHOES
@@ -359,10 +359,12 @@ const products = [
   }
 ];
 
-const seedProducts = async () => {
+async function seedProducts() {
   try {
-    // Connect to MongoDB
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/joota-junction');
+    await mongoose.connect(process.env.MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    });
     console.log('Connected to MongoDB');
 
     // Clear existing products

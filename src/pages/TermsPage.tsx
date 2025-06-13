@@ -73,7 +73,7 @@ const TermsPage: React.FC = () => {
             <section>
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Shipping Information</h2>
               <div className="space-y-4 text-gray-600">
-                <p>We offer free shipping on all orders over ₹2,000. For orders below this amount, a standard shipping fee of ₹99 will apply.</p>
+                <p>We offer free shipping on all orders over ₹3,000. For orders below this amount, a standard shipping fee of ₹149 will apply.</p>
                 <p>Standard delivery typically takes 3-5 business days. Delivery times may vary depending on your location and the availability of the product.</p>
                 <p>We currently ship to all major cities and towns across India. For remote locations, delivery may take an additional 2-3 business days.</p>
                 <p>Once your order is shipped, you will receive a tracking number via email and SMS to track your package.</p>
@@ -83,7 +83,7 @@ const TermsPage: React.FC = () => {
             <section>
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Returns & Exchanges</h2>
               <div className="space-y-4 text-gray-600">
-                <p>We offer a 30-day return policy from the date of delivery. If you're not completely satisfied with your purchase, you can return it within this period.</p>
+                <p>We offer a 7-day return policy from the date of delivery. If you're not completely satisfied with your purchase, you can return it within this period.</p>
                 <p>To be eligible for a return, your item must be:</p>
                 <ul className="list-disc pl-6 space-y-2">
                   <li>Unused and in the same condition that you received it</li>
@@ -115,8 +115,8 @@ const TermsPage: React.FC = () => {
                 <p>If you have any questions about our shipping and returns policy, please don't hesitate to contact us:</p>
                 <ul className="list-disc pl-6 space-y-2">
                   <li>Email: {primaryEmail}</li>
-                  <li>Phone: {primaryPhone}</li>
-                  <li>Hours: Monday to Saturday, 10:00 AM to 7:00 PM IST</li>
+                  <li>Phone: 7830964108</li>
+                  <li>Hours: Monday to Saturday, 10:00 AM to 6:00 PM IST</li>
                 </ul>
               </div>
             </section>

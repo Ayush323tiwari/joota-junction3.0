@@ -76,11 +76,12 @@ const Index = () => {
 
   // Filter brands to show only specific ones
   const filteredBrands = useMemo(() => {
+    if (!Array.isArray(brands)) return [];
     const targetBrands = ['Nike', 'Puma', 'Adidas', 'New Balance'];
     return brands.filter(brand => targetBrands.includes(brand.name));
   }, [brands]);
 
-  const featuredProducts = products.filter(product => product.featured);
+  const featuredProducts = Array.isArray(products) ? products.filter(product => product.featured) : [];
 
   // Check if device is mobile
   useEffect(() => {

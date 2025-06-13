@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { useNavigate } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
 import axios from 'axios';
+import { API_URL } from '../config';
 
 interface User {
   _id: string;
@@ -162,7 +163,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('User info from Google:', userInfo.data);
 
         // Send to your backend
-        const response = await fetch('http://localhost:5001/api/auth/google', {
+        const response = await fetch(`${API_URL}/api/auth/google`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

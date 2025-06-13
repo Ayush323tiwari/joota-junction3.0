@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { formatCurrency } from '../lib/utils';
-import { ordersAPI } from '../services/api';
+import { API_URL } from '../config';
 
 interface FormErrors {
   email?: string;
@@ -16,8 +16,6 @@ interface FormErrors {
   state?: string;
   zipCode?: string;
 }
-
-const SHIPPING_COST = 0; // Free shipping for now
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -99,6 +97,10 @@ const Checkout = () => {
     }
   };
 
+  // Calculate shipping cost based on total
+  const shippingCost = total >= 3000 ? 0 : 149;
+  const finalTotal = total + shippingCost;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -116,8 +118,8 @@ const Checkout = () => {
       // Prepare order data for API
       const orderData = {
         items: items.map(item => ({
-          product: item.id, // Product ID from cart
-          size: parseInt(item.size), // Convert string to number
+          product: item.id,
+          size: parseInt(item.size),
           quantity: item.quantity || 1,
           price: item.price
         })),
@@ -128,13 +130,13 @@ const Checkout = () => {
           zipCode: formData.zipCode,
           country: formData.country
         },
-        paymentMethod: 'credit_card', // Default payment method
-        totalPrice: total + SHIPPING_COST,
-        shippingPrice: SHIPPING_COST
+        paymentMethod: 'credit_card',
+        totalPrice: finalTotal,
+        shippingPrice: shippingCost
       };
 
       // Create order in MongoDB via API
-      const response = await fetch('http://localhost:5001/api/orders', {
+      const response = await fetch(`${API_URL}/api/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -198,72 +200,76 @@ const Checkout = () => {
     setIsProcessing(true);
     console.log('Starting Razorpay payment flow...');
     const scriptLoaded = await loadRazorpayScript();
-    console.log('Razorpay script loaded:', scriptLoaded);
-    const payAmount = codMode ? 200 : total;
     if (!scriptLoaded) {
-      setError('Failed to load Razorpay SDK.');
+      setError('Failed to load payment gateway. Please try again.');
       setIsProcessing(false);
       return;
     }
-    const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
-    console.log('Razorpay Key:', razorpayKey);
-    if (!razorpayKey) {
-      setError('Razorpay Key is missing in environment variables.');
-      setIsProcessing(false);
-      return;
-    }
-    try {
-      // 1. Create Razorpay order on backend
-      const res = await fetch('http://localhost:5001/api/orders/create-razorpay-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: payAmount, currency: 'INR' }),
-      });
-      const order = await res.json();
-      console.log('Backend Razorpay order response:', order);
-      if (!order.id) throw new Error('Failed to create Razorpay order');
 
-      // 2. Open Razorpay checkout
+    try {
+      // Create Razorpay order
+      const res = await fetch(`${API_URL}/api/orders/create-razorpay-order`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ 
+          amount: finalTotal,
+          codMode 
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to create payment order');
+      }
+
+      const orderData = await res.json();
+
+      // Initialize Razorpay
       const options = {
-        key: razorpayKey,
-        amount: order.amount,
-        currency: order.currency,
-        name: 'Joota Junction',
-        description: codMode ? 'COD Order Confirmation' : 'Order Payment',
-        order_id: order.id,
-        handler: async function (response: any) {
-          await handleSubmitRazorpayOrder(response, codMode);
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: orderData.amount,
+        currency: "INR",
+        name: "Joota Junction",
+        description: "Payment for your order",
+        order_id: orderData.id,
+        handler: function (response: any) {
+          handleSubmitRazorpayOrder(response, codMode);
         },
         prefill: {
           name: `${formData.firstName} ${formData.lastName}`,
           email: formData.email,
-          contact: formData.phone,
+          contact: formData.phone
         },
-        theme: { color: '#3399cc' },
+        theme: {
+          color: "#F59E0B"
+        },
         modal: {
-          ondismiss: () => {
-            navigate('/order-fail');
+          ondismiss: function() {
+            setIsProcessing(false);
+            setError('Payment was cancelled. Please try again.');
           }
         }
       };
-      if (!(window as any).Razorpay) {
-        setError('Razorpay SDK not loaded.');
+
+      const razorpay = new (window as any).Razorpay(options);
+      razorpay.on('payment.failed', function (response: any) {
         setIsProcessing(false);
-        return;
-      }
-      const rzp = new (window as any).Razorpay(options);
-      rzp.open();
+        setError('Payment failed. Please try again.');
+        console.error('Payment failed:', response.error);
+      });
+      razorpay.open();
+    } catch (err) {
+      console.error('Payment error:', err);
+      setError('Failed to process payment. Please try again.');
       setIsProcessing(false);
-    } catch (err: any) {
-      setError(err.message || 'Razorpay payment failed.');
-      setIsProcessing(false);
-      console.error('Razorpay payment error:', err);
     }
   };
 
   const handleSubmitRazorpayOrder = async (razorpayResponse: any, codMode = false) => {
     try {
-      // Prepare order data for API (same as before, but with payment info)
+      // Prepare order data for API
       const orderData = {
         items: items.map(item => ({
           product: item.id,
@@ -279,15 +285,17 @@ const Checkout = () => {
           country: formData.country
         },
         paymentMethod: codMode ? 'cod' : 'razorpay',
-        totalPrice: total + SHIPPING_COST,
-        shippingPrice: SHIPPING_COST,
-        amountPaid: codMode ? 200 : total + SHIPPING_COST,
-        amountDue: codMode ? (total + SHIPPING_COST - 200) : 0,
+        totalPrice: finalTotal,
+        shippingPrice: shippingCost,
+        amountPaid: codMode ? 200 : finalTotal,
+        amountDue: codMode ? (finalTotal - 200) : 0,
         razorpayPaymentId: razorpayResponse.razorpay_payment_id,
         razorpayOrderId: razorpayResponse.razorpay_order_id,
-        razorpaySignature: razorpayResponse.razorpay_signature,
+        razorpaySignature: razorpayResponse.razorpay_signature
       };
-      const response = await fetch('http://localhost:5001/api/orders', {
+
+      // Create order in database
+      const response = await fetch(`${API_URL}/api/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -295,22 +303,29 @@ const Checkout = () => {
         },
         body: JSON.stringify(orderData)
       });
+
       if (!response.ok) {
         const errorData = await response.json();
-        setError(errorData.message || 'Failed to create order after payment.');
-        return;
+        throw new Error(errorData.message || 'Failed to create order');
       }
+
       const createdOrder = await response.json();
+
+      // Clear cart after successful order creation
       await clearCart();
+      
+      // Navigate to success page
       navigate('/order-success', { 
         state: { 
-          orderId: createdOrder._id, 
+          orderId: createdOrder._id,
           total: createdOrder.totalPrice,
           customerName: `${formData.firstName} ${formData.lastName}`,
         } 
       });
     } catch (err) {
-      setError('Order creation failed after payment.');
+      console.error('Error processing order:', err);
+      setError('An error occurred while processing your order. Please try again.');
+      setIsProcessing(false);
       navigate('/order-fail');
     }
   };
@@ -591,14 +606,19 @@ const Checkout = () => {
               </div>
               <div className="flex justify-between text-gray-600">
                 <span>Shipping</span>
-                <span>{SHIPPING_COST === 0 ? 'Free' : formatCurrency(SHIPPING_COST)}</span>
+                <span>{shippingCost === 0 ? 'Free' : formatCurrency(shippingCost)}</span>
               </div>
               <div className="border-t border-gray-200 pt-3">
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span>{formatCurrency(total + SHIPPING_COST)}</span>
+                  <span>{formatCurrency(finalTotal)}</span>
                 </div>
               </div>
+              {total < 3000 && (
+                <p className="text-sm text-gray-500 mt-2">
+                  Add {formatCurrency(3000 - total)} more to get free shipping!
+                </p>
+              )}
             </div>
           </div>
         </div>

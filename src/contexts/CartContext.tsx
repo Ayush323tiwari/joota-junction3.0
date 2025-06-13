@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authAPI } from '../services/api';
 import { useAuth } from './AuthContext';
+import { API_URL } from '../config';
 
 interface CartItem {
     id: string;
@@ -89,7 +90,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     try {
       // Check stock availability before adding to cart
-      const response = await fetch(`http://localhost:5001/api/products/${item.id}`);
+      const response = await fetch(`${API_URL}/api/products/${item.id}`);
       if (response.ok) {
         const product = await response.json();
         const sizeObj = product.sizes?.find((s: any) => s.size === parseInt(item.size));
@@ -160,7 +161,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       // Check stock availability before updating quantity
-      const response = await fetch(`http://localhost:5001/api/products/${itemId}`);
+      const response = await fetch(`${API_URL}/api/products/${itemId}`);
       if (response.ok) {
         const product = await response.json();
         const sizeObj = product.sizes?.find((s: any) => s.size === parseInt(size));

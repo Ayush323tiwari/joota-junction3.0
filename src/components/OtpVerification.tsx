@@ -3,6 +3,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { toast } from 'sonner';
+import { API_URL } from '../config';
 
 interface OtpVerificationProps {
   email: string;
@@ -27,7 +28,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5001/api/auth/verify-otp', {
+      const response = await fetch(`${API_URL}/api/auth/verify-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

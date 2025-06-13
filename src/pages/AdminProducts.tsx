@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAdmin } from '../contexts/AdminContext';
+import { API_URL } from '../config';
 
 interface Product {
   _id: string;
@@ -38,7 +39,7 @@ const AdminProducts: React.FC = () => {
     try {
       const token = localStorage.getItem('adminToken');
       const response = await fetch(
-        `http://localhost:5001/api/admin/products?page=${currentPage}&limit=10`,
+        `${API_URL}/api/admin/products?page=${currentPage}&limit=10`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -61,7 +62,7 @@ const AdminProducts: React.FC = () => {
   const handleDeleteProduct = async (productId: string) => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch(`http://localhost:5001/api/admin/products/${productId}`, {
+      const response = await fetch(`${API_URL}/api/admin/products/${productId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

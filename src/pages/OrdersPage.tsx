@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Package, Clock, Truck, CheckCircle, XCircle, MapPin, CreditCard, Calendar, Star } from 'lucide-react';
 import Header from '../components/Header';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../components/ui/dialog';
+import { API_URL } from '../config';
 
 interface OrderItem {
   product: {
@@ -83,7 +84,7 @@ const OrdersPage: React.FC = () => {
         navigate('/', { replace: true });
         return;
       }
-      const response = await fetch('http://localhost:5001/api/orders', {
+      const response = await fetch(`${API_URL}/api/orders`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -130,7 +131,7 @@ const OrdersPage: React.FC = () => {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const response = await fetch('http://localhost:5001/api/reviews/user', {
+      const response = await fetch(`${API_URL}/api/reviews/user`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -239,7 +240,7 @@ const OrdersPage: React.FC = () => {
       formData.append('message', reviewMessage);
       formData.append('rating', reviewRating.toString());
       reviewImages.forEach((file) => formData.append('images', file));
-      const response = await fetch('http://localhost:5001/api/reviews', {
+      const response = await fetch(`${API_URL}/api/reviews`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -358,7 +359,7 @@ const OrdersPage: React.FC = () => {
                             <img
                               src={item.product.images && item.product.images.length > 0 ? 
                                 (item.product.images[0].startsWith('/uploads/products') ? 
-                                  `http://localhost:5001${item.product.images[0]}` : 
+                                  `${API_URL}${item.product.images[0]}` : 
                                   item.product.images[0]) : 
                                 '/placeholder-image.jpg'}
                               alt={item.product.name || 'Product'}

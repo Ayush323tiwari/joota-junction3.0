@@ -107,9 +107,9 @@ const Footer: React.FC<FooterProps> = ({ className = '' }) => {
     );
   }
 
-  const primaryEmail = storeSettings?.contactEmails[0]?.email || 'admin@jootajunction.com';
-  const primaryPhone = storeSettings?.phoneNumbers[0]?.number || '+91 98765 43210';
-  const primaryAddress = storeSettings?.addresses[0];
+  const primaryEmail = storeSettings?.contactEmails?.[0]?.email || 'admin@jootajunction.com';
+  const primaryPhone = storeSettings?.phoneNumbers?.[0]?.number || '+91 98765 43210';
+  const primaryAddress = storeSettings?.addresses?.[0];
 
   return (
     <footer className={`w-full bg-gray-900 text-white py-16 px-4 ${className}`}>
