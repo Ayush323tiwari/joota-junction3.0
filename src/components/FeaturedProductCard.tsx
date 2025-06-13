@@ -145,7 +145,7 @@ const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({ product, onPr
       <div className="p-4">
         <div className="mb-2">
           <p className="text-sm text-gray-500 font-medium mb-1">{product.brand}</p>
-          <h3 className="font-bold text-gray-900 group-hover:text-black transition-colors line-clamp-2">
+          <h3 className="font-bold text-gray-900 group-hover:text-black transition-colors truncate">
             {product.name}
           </h3>
         </div>

@@ -55,6 +55,16 @@ const OrdersPage: React.FC = () => {
   const [reviewSuccess, setReviewSuccess] = useState(false);
   const [productReviews, setProductReviews] = useState<{[key: string]: boolean}>({});
 
+  // Reset review form state when a new product is selected
+  const handleReviewClick = (orderId: string, productId: string) => {
+    setReviewModal({ orderId, productId });
+    setReviewImages([]);
+    setReviewMessage('');
+    setReviewRating(0);
+    setReviewError(null);
+    setReviewSuccess(false);
+  };
+
   useEffect(() => {
     if (!user) {
       navigate('/', { replace: true });
@@ -238,15 +248,15 @@ const OrdersPage: React.FC = () => {
         const data = await response.json();
         throw new Error(data.message || 'Failed to submit review');
       }
+      setProductReviews(prev => ({
+        ...prev,
+        [reviewModal.productId]: true
+      }));
       setReviewSuccess(true);
       setReviewModal(null);
       setReviewImages([]);
       setReviewMessage('');
       setReviewRating(0);
-      setProductReviews(prev => ({
-        ...prev,
-        [reviewModal.productId]: true
-      }));
     } catch (err: any) {
       setReviewError(err.message || 'Failed to submit review');
     } finally {
@@ -384,13 +394,14 @@ const OrdersPage: React.FC = () => {
                           <p className="font-medium text-gray-900 text-sm sm:text-base">{formatCurrency(item.price)}</p>
                           {order.status === 'delivered' && item.product && (
                             <button
-                              className={`mt-2 px-4 py-2 rounded-lg text-xs font-semibold shadow-sm transition-colors border focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                              className={`mt-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs font-semibold shadow-sm transition-colors border focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                                 productReviews[item.product._id]
-                                  ? 'bg-gray-300 text-gray-500 border-gray-300 cursor-not-allowed'
+                                  ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed pointer-events-none'
                                   : 'bg-black text-white border-black hover:bg-gray-900 focus:ring-black'
                               }`}
-                              onClick={() => !productReviews[item.product._id] && setReviewModal({ orderId: order._id, productId: item.product._id })}
+                              onClick={() => !productReviews[item.product._id] && handleReviewClick(order._id, item.product._id)}
                               disabled={productReviews[item.product._id]}
+                              aria-disabled={productReviews[item.product._id]}
                             >
                               {productReviews[item.product._id] ? 'Reviewed' : 'Review'}
                             </button>
@@ -440,26 +451,43 @@ const OrdersPage: React.FC = () => {
         )}
       </div>
       <Dialog open={!!reviewModal} onOpenChange={() => setReviewModal(null)}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto p-4 sm:p-6">
           <DialogTitle>Write a Review</DialogTitle>
           <DialogDescription>Share your experience with this product. Please rate, write a message, and upload images if you wish.</DialogDescription>
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md mx-auto">
-            <label className="block mb-2 font-medium">Rating</label>
-            <div className="flex items-center mb-4">
-              {[1,2,3,4,5].map((star) => (
-                <button key={star} type="button" onClick={() => setReviewRating(star)}>
-                  <Star className={`h-6 w-6 ${reviewRating >= star ? 'text-yellow-400' : 'text-gray-300'}`} fill={reviewRating >= star ? '#facc15' : 'none'} />
-                </button>
-              ))}
+          <div className="bg-white rounded-lg shadow-lg max-w-md mx-auto">
+            <div className="p-4 sm:p-6">
+              <label className="block mb-2 font-medium">Rating</label>
+              <div className="flex items-center mb-4">
+                {[1,2,3,4,5].map((star) => (
+                  <button key={star} type="button" onClick={() => setReviewRating(star)}>
+                    <Star className={`h-6 w-6 ${reviewRating >= star ? 'text-yellow-400' : 'text-gray-300'}`} fill={reviewRating >= star ? '#facc15' : 'none'} />
+                  </button>
+                ))}
+              </div>
+              <label className="block mb-2 font-medium">Message</label>
+              <textarea 
+                className="w-full border rounded p-2 mb-4 min-h-[100px]" 
+                rows={3} 
+                value={reviewMessage} 
+                onChange={e => setReviewMessage(e.target.value)} 
+              />
+              <label className="block mb-2 font-medium">Upload Images</label>
+              <input 
+                type="file" 
+                multiple 
+                accept="image/*" 
+                onChange={e => setReviewImages(Array.from(e.target.files || []))} 
+                className="mb-4 w-full" 
+              />
+              {reviewError && <div className="text-red-600 mb-2">{reviewError}</div>}
+              <button 
+                className="bg-black text-white px-4 py-2 rounded-lg font-semibold shadow-sm hover:bg-gray-900 transition-colors border border-black focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 w-full" 
+                onClick={handleReviewSubmit} 
+                disabled={reviewLoading}
+              >
+                {reviewLoading ? 'Submitting...' : 'Submit Review'}
+              </button>
             </div>
-            <label className="block mb-2 font-medium">Message</label>
-            <textarea className="w-full border rounded p-2 mb-4" rows={3} value={reviewMessage} onChange={e => setReviewMessage(e.target.value)} />
-            <label className="block mb-2 font-medium">Upload Images</label>
-            <input type="file" multiple accept="image/*" onChange={e => setReviewImages(Array.from(e.target.files || []))} className="mb-4" />
-            {reviewError && <div className="text-red-600 mb-2">{reviewError}</div>}
-            <button className="bg-black text-white px-4 py-2 rounded-lg font-semibold shadow-sm hover:bg-gray-900 transition-colors border border-black focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 w-full" onClick={handleReviewSubmit} disabled={reviewLoading}>
-              {reviewLoading ? 'Submitting...' : 'Submit Review'}
-            </button>
           </div>
         </DialogContent>
       </Dialog>

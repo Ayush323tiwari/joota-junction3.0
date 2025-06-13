@@ -1,8 +1,60 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
+import { storeSettingsAPI } from '../services/api';
+
+interface StoreSettings {
+  storeName: string;
+  contactEmails: Array<{
+    email: string;
+    label: string;
+    isActive: boolean;
+  }>;
+  phoneNumbers: Array<{
+    number: string;
+    label: string;
+    isActive: boolean;
+  }>;
+}
 
 const TermsPage: React.FC = () => {
+  const [storeSettings, setStoreSettings] = useState<StoreSettings | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStoreSettings = async () => {
+      try {
+        const settings = await storeSettingsAPI.getStoreSettings();
+        setStoreSettings(settings);
+      } catch (error) {
+        console.error('Error fetching store settings:', error);
+        // Use default values if API fails
+        setStoreSettings({
+          storeName: 'JOOTA JUNCTION',
+          contactEmails: [{ email: 'support@jootajunction.com', label: 'Support', isActive: true }],
+          phoneNumbers: [{ number: '+91 1234567890', label: 'Support', isActive: true }]
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStoreSettings();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+
+  const primaryEmail = storeSettings?.contactEmails[0]?.email || 'support@jootajunction.com';
+  const primaryPhone = storeSettings?.phoneNumbers[0]?.number || '+91 1234567890';
+
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -62,8 +114,8 @@ const TermsPage: React.FC = () => {
               <div className="space-y-4 text-gray-600">
                 <p>If you have any questions about our shipping and returns policy, please don't hesitate to contact us:</p>
                 <ul className="list-disc pl-6 space-y-2">
-                  <li>Email: support@jootajunction.com</li>
-                  <li>Phone: +91 1234567890</li>
+                  <li>Email: {primaryEmail}</li>
+                  <li>Phone: {primaryPhone}</li>
                   <li>Hours: Monday to Saturday, 10:00 AM to 7:00 PM IST</li>
                 </ul>
               </div>

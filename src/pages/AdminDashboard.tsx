@@ -297,7 +297,7 @@ const AdminDashboard: React.FC = () => {
   const fetchDashboardData = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:5001/api/admin/dashboard', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/dashboard`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -320,7 +320,7 @@ const AdminDashboard: React.FC = () => {
   const fetchProducts = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:5001/api/admin/products', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/products`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -343,7 +343,7 @@ const AdminDashboard: React.FC = () => {
         return;
       }
 
-      const response = await fetch('http://localhost:5001/api/admin/brands', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/brands`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -365,7 +365,7 @@ const AdminDashboard: React.FC = () => {
   const fetchOrders = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:5001/api/admin/orders', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/orders`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -383,7 +383,7 @@ const AdminDashboard: React.FC = () => {
   const fetchFeaturedProducts = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:5001/api/admin/featured-products', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/featured-products`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -401,7 +401,7 @@ const AdminDashboard: React.FC = () => {
   const fetchAllProductsForFeatured = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:5001/api/admin/products-for-featured', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/products-for-featured`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -419,7 +419,7 @@ const AdminDashboard: React.FC = () => {
   const fetchStoreSettings = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:5001/api/admin/store-settings', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/store-settings`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -451,7 +451,7 @@ const AdminDashboard: React.FC = () => {
           formData.append('images', file);
         });
       }
-      const response = await fetch('http://localhost:5001/api/admin/products', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/products`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -491,7 +491,7 @@ const AdminDashboard: React.FC = () => {
           formData.append('images', file);
         });
       }
-      const response = await fetch(`http://localhost:5001/api/admin/products/${editingProduct._id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/products/${editingProduct._id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -545,7 +545,7 @@ const AdminDashboard: React.FC = () => {
   const handleDeleteProduct = async (productId: string) => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch(`http://localhost:5001/api/admin/products/${productId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/products/${productId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -563,7 +563,7 @@ const AdminDashboard: React.FC = () => {
   const handleUpdateInventory = async (productId: string, size: number, stock: number) => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch(`http://localhost:5001/api/admin/products/${productId}/inventory`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/products/${productId}/inventory`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -606,7 +606,7 @@ const AdminDashboard: React.FC = () => {
   const handleUpdateOrderStatus = async (orderId: string, status: string) => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch(`http://localhost:5001/api/admin/orders/${orderId}/status`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/orders/${orderId}/status`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -669,7 +669,7 @@ const AdminDashboard: React.FC = () => {
       }
 
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:5001/api/brands', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/brands`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -714,7 +714,7 @@ const AdminDashboard: React.FC = () => {
       }
 
       const token = localStorage.getItem('adminToken');
-      const response = await fetch(`http://localhost:5001/api/brands/${editingBrand._id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/brands/${editingBrand._id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -769,7 +769,7 @@ const AdminDashboard: React.FC = () => {
 
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch(`http://localhost:5001/api/brands/${brandId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/brands/${brandId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -815,7 +815,7 @@ const AdminDashboard: React.FC = () => {
     try {
       setLoadingFeatured(true);
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:5001/api/admin/featured-products/bulk', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/featured-products/bulk`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -842,7 +842,7 @@ const AdminDashboard: React.FC = () => {
   const handleRemoveFromFeatured = async (productId: string) => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch(`http://localhost:5001/api/admin/products/${productId}/featured`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/products/${productId}/featured`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -867,7 +867,7 @@ const AdminDashboard: React.FC = () => {
       setSettingsMessage('');
       
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:5001/api/admin/store-settings', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/store-settings`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -1257,7 +1257,7 @@ const AdminDashboard: React.FC = () => {
                           <TableRow key={product._id} className="hover:bg-gray-50">
                             <TableCell className="px-2 sm:px-6">
                               <img 
-                                src={product.images[0] ? (product.images[0].startsWith('/uploads/products') ? `http://localhost:5001${product.images[0]}` : product.images[0]) : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMjAgMTVDMjIuNzYxNCAxNSAyNSAxNy4yMzg2IDI1IDIwQzI1IDIyLjc2MTQgMjIuNzYxNCAyNSAyMCAyNUMxNy4yMzg2IDI1IDE1IDIyLjc2MTQgMTUgMjBDMTUgMTcuMjM4NiAxNy4yMzg2IDE1IDIwIDE1WiIgZmlsbD0iIzk0OTY5RiIvPjxwYXRoIGQ9Ik0yMCAyN0MyMy4zMTM3IDI3IDI2IDI0LjMxMzcgMjYgMjFIMTRDMTQgMjQuMzEzNyAxNi42ODYzIDI3IDIwIDI3WiIgZmlsbD0iIzk0OTY5RiIvPjwvc3ZnPg=='} 
+                                src={product.images[0] ? (product.images[0].startsWith('/uploads/products') ? `${import.meta.env.VITE_API_URL}${product.images[0]}` : product.images[0]) : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMjAgMTVDMjIuNzYxNCAxNSAyNSAxNy4yMzg2IDI1IDIwQzI1IDIyLjc2MTQgMjIuNzYxNCAyNSAyMCAyNUMxNy4yMzg2IDI1IDE1IDIyLjc2MTQgMTUgMjBDMTUgMTcuMjM4NiAxNy4yMzg2IDE1IDIwIDE1WiIgZmlsbD0iIzk0OTY5RiIvPjxwYXRoIGQ9Ik0yMCAyN0MyMy4zMTM3IDI3IDI2IDI0LjMxMzcgMjYgMjFIMTRDMTQgMjQuMzEzNyAxNi42ODYzIDI3IDIwIDI3WiIgZmlsbD0iIzk0OTY5RiIvPjwvc3ZnPg=='} 
                                 alt={product.name} 
                                 className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-md"
                                 onError={(e) => {
@@ -1343,7 +1343,7 @@ const AdminDashboard: React.FC = () => {
                         <TableRow key={product._id} className="hover:bg-gray-50">
                           <TableCell className="px-2 sm:px-6">
                             <img 
-                              src={product.images[0] ? (product.images[0].startsWith('/uploads/products') ? `http://localhost:5001${product.images[0]}` : product.images[0]) : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMjAgMTVDMjIuNzYxNCAxNSAyNSAxNy4yMzg2IDI1IDIwQzI1IDIyLjc2MTQgMjIuNzYxNCAyNSAyMCAyNUMxNy4yMzg2IDI1IDE1IDIyLjc2MTQgMTUgMjBDMTUgMTcuMjM4NiAxNy4yMzg2IDE1IDIwIDE1WiIgZmlsbD0iIzk0OTY5RiIvPjxwYXRoIGQ9Ik0yMCAyN0MyMy4zMTM3IDI3IDI2IDI0LjMxMzcgMjYgMjFIMTRDMTQgMjQuMzEzNyAxNi42ODYzIDI3IDIwIDI3WiIgZmlsbD0iIzk0OTY5RiIvPjwvc3ZnPg=='} 
+                              src={product.images[0] ? (product.images[0].startsWith('/uploads/products') ? `${import.meta.env.VITE_API_URL}${product.images[0]}` : product.images[0]) : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMjAgMTVDMjIuNzYxNCAxNSAyNSAxNy4yMzg2IDI1IDIwQzI1IDIyLjc2MTQgMjIuNzYxNCAyNSAyMCAyNUMxNy4yMzg2IDI1IDE1IDIyLjc2MTQgMTUgMjBDMTUgMTcuMjM4NiAxNy4yMzg2IDE1IDIwIDE1WiIgZmlsbD0iIzk0OTY5RiIvPjxwYXRoIGQ9Ik0yMCAyN0MyMy4zMTM3IDI3IDI2IDI0LjMxMzcgMjYgMjFIMTRDMTQgMjQuMzEzNyAxNi42ODYzIDI3IDIwIDI3WiIgZmlsbD0iIzk0OTY5RiIvPjwvc3ZnPg=='} 
                               alt={product.name} 
                               className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-md"
                               onError={(e) => {
