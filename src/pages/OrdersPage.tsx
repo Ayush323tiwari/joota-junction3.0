@@ -12,6 +12,7 @@ interface OrderItem {
     price: number;
     images: string[];
     brand: string;
+    hasReview?: boolean;
   };
   size: number;
   quantity: number;
@@ -52,6 +53,7 @@ const OrdersPage: React.FC = () => {
   const [reviewLoading, setReviewLoading] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
   const [reviewSuccess, setReviewSuccess] = useState(false);
+  const [productReviews, setProductReviews] = useState<{[key: string]: boolean}>({});
 
   useEffect(() => {
     if (!user) {
@@ -59,6 +61,7 @@ const OrdersPage: React.FC = () => {
       return;
     }
     fetchOrders();
+    fetchProductReviews();
   }, [user, navigate]);
 
   const fetchOrders = async () => {
@@ -109,6 +112,30 @@ const OrdersPage: React.FC = () => {
       setError('Error loading orders');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchProductReviews = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch('http://localhost:5001/api/reviews/user', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const reviewsMap = data.reviews.reduce((acc: {[key: string]: boolean}, review: any) => {
+          acc[review.product] = true;
+          return acc;
+        }, {});
+        setProductReviews(reviewsMap);
+      }
+    } catch (error) {
+      console.error('Error fetching user reviews:', error);
     }
   };
 
@@ -216,6 +243,10 @@ const OrdersPage: React.FC = () => {
       setReviewImages([]);
       setReviewMessage('');
       setReviewRating(0);
+      setProductReviews(prev => ({
+        ...prev,
+        [reviewModal.productId]: true
+      }));
     } catch (err: any) {
       setReviewError(err.message || 'Failed to submit review');
     } finally {
@@ -315,7 +346,11 @@ const OrdersPage: React.FC = () => {
                         {item.product ? (
                           <>
                             <img
-                              src={item.product.images && item.product.images.length > 0 ? item.product.images[0] : '/placeholder-image.jpg'}
+                              src={item.product.images && item.product.images.length > 0 ? 
+                                (item.product.images[0].startsWith('/uploads/products') ? 
+                                  `http://localhost:5001${item.product.images[0]}` : 
+                                  item.product.images[0]) : 
+                                '/placeholder-image.jpg'}
                               alt={item.product.name || 'Product'}
                               className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-lg flex-shrink-0"
                               onError={(e) => {
@@ -349,10 +384,15 @@ const OrdersPage: React.FC = () => {
                           <p className="font-medium text-gray-900 text-sm sm:text-base">{formatCurrency(item.price)}</p>
                           {order.status === 'delivered' && item.product && (
                             <button
-                              className="mt-2 bg-black text-white px-4 py-2 rounded-lg text-xs font-semibold shadow-sm hover:bg-gray-900 transition-colors border border-black focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
-                              onClick={() => setReviewModal({ orderId: order._id, productId: item.product._id })}
+                              className={`mt-2 px-4 py-2 rounded-lg text-xs font-semibold shadow-sm transition-colors border focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                                productReviews[item.product._id]
+                                  ? 'bg-gray-300 text-gray-500 border-gray-300 cursor-not-allowed'
+                                  : 'bg-black text-white border-black hover:bg-gray-900 focus:ring-black'
+                              }`}
+                              onClick={() => !productReviews[item.product._id] && setReviewModal({ orderId: order._id, productId: item.product._id })}
+                              disabled={productReviews[item.product._id]}
                             >
-                              Review
+                              {productReviews[item.product._id] ? 'Reviewed' : 'Review'}
                             </button>
                           )}
                         </div>

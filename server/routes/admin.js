@@ -9,6 +9,7 @@ const Order = require('../models/Order');
 const Category = require('../models/Category');
 const Brand = require('../models/Brand');
 const StoreSettings = require('../models/StoreSettings');
+const { uploadProduct } = require('../middleware/upload');
 
 // Admin Dashboard Statistics
 router.get('/dashboard', adminProtect, async (req, res) => {
@@ -196,17 +197,20 @@ router.get('/orders/:id', adminProtect, async (req, res) => {
 });
 
 // Create new product
-router.post('/products', adminProtect, async (req, res) => {
+router.post('/products', adminProtect, uploadProduct.array('images', 5), async (req, res) => {
   try {
-    const { name, brand, category, price, description, images, sizes } = req.body;
+    const { name, brand, category, price, description, sizes } = req.body;
     
     // Validate required fields
-    if (!name || !brand || !category || !price || !description || !images || !sizes) {
+    if (!name || !brand || !category || !price || !description || !sizes) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
+    // Get uploaded image paths
+    const images = req.files ? req.files.map(file => `/uploads/products/${file.filename}`) : [];
+
     // Format sizes array
-    const formattedSizes = sizes.map(size => ({
+    const formattedSizes = JSON.parse(sizes).map(size => ({
       size: parseInt(size),
       stock: 0 // Default stock for new sizes
     }));
@@ -229,21 +233,25 @@ router.post('/products', adminProtect, async (req, res) => {
 });
 
 // Update product
-router.put('/products/:id', adminProtect, async (req, res) => {
+router.put('/products/:id', adminProtect, uploadProduct.array('images', 5), async (req, res) => {
   try {
-    const { name, brand, category, price, description, images, sizes } = req.body;
+    const { name, brand, category, price, description, sizes } = req.body;
     
     const updateData = {
       name,
       brand,
       category,
       price,
-      description,
-      images
+      description
     };
 
+    // Handle new images if uploaded
+    if (req.files && req.files.length > 0) {
+      updateData.images = req.files.map(file => `/uploads/products/${file.filename}`);
+    }
+
     // If sizes are provided, preserve existing stock
-    if (sizes && Array.isArray(sizes)) {
+    if (sizes) {
       // Get the current product to preserve existing stock
       const currentProduct = await Product.findById(req.params.id);
       if (!currentProduct) {
@@ -257,9 +265,10 @@ router.put('/products/:id', adminProtect, async (req, res) => {
       });
 
       // Create new sizes array preserving existing stock
-      updateData.sizes = sizes.map(sizeObj => ({
-        size: parseInt(sizeObj.size),
-        stock: existingStockMap.get(parseInt(sizeObj.size)) || 0 // Preserve existing stock, default to 0 for new sizes
+      const parsedSizes = JSON.parse(sizes);
+      updateData.sizes = parsedSizes.map(size => ({
+        size: parseInt(size),
+        stock: existingStockMap.get(parseInt(size)) || 0 // Preserve existing stock, default to 0 for new sizes
       }));
     }
 

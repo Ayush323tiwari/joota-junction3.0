@@ -2,9 +2,21 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const fs = require('fs');
+const path = require('path');
 
 // Load environment variables
 dotenv.config();
+
+// Create upload directories if they don't exist
+const uploadDirs = ['uploads/products', 'uploads/reviews'];
+uploadDirs.forEach(dir => {
+  const dirPath = path.join(__dirname, dir);
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+    console.log(`Created directory: ${dirPath}`);
+  }
+});
 
 // Create Express app
 const app = express();
@@ -140,6 +152,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/brands', brandRoutes);
 app.use('/api/reviews', reviewsRouter);
 app.use('/uploads/reviews', express.static('uploads/reviews'));
+app.use('/uploads/products', express.static('uploads/products'));
 
 // Basic route for testing
 app.get('/api/test', (req, res) => {

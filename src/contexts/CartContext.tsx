@@ -36,15 +36,22 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           const response = await authAPI.getProfile();
           if (response.cart) {
-            const cartItems = response.cart.map((item: any) => ({
-              id: item.productId._id,
-              name: item.productId.name,
-              price: item.productId.price,
-              image: item.productId.images[0],
-              size: item.size,
-              brand: item.productId.brand,
-              quantity: item.quantity
-            }));
+            const cartItems = response.cart.map((item: any) => {
+              const imageUrl = item.productId.images[0];
+              const processedImage = imageUrl.startsWith('/uploads/products')
+                ? `http://localhost:5001${imageUrl}`
+                : imageUrl;
+
+              return {
+                id: item.productId._id,
+                name: item.productId.name,
+                price: item.productId.price,
+                image: processedImage,
+                size: item.size,
+                brand: item.productId.brand,
+                quantity: item.quantity
+              };
+            });
             setItems(cartItems);
           }
         } catch (error) {
@@ -113,6 +120,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         i => i.id === item.id && i.size === item.size
       );
 
+      // Process image URL
+      const processedImage = item.image.startsWith('/uploads/products') 
+        ? `http://localhost:5001${item.image}`
+        : item.image;
+
       let updatedItems;
       if (existingItem) {
         console.log('Updating existing item quantity');
@@ -123,7 +135,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         );
       } else {
         console.log('Adding new item to cart');
-        updatedItems = [...prevItems, { ...item, quantity: 1 }];
+        updatedItems = [...prevItems, { ...item, image: processedImage, quantity: 1 }];
       }
 
       console.log('Updated cart items:', updatedItems);
