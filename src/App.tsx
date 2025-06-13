@@ -31,6 +31,7 @@ import ProtectedAdminRoute from './components/ProtectedAdminRoute';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import Footer from './components/Footer';
 import SearchPage from './pages/SearchPage';
+import TermsPage from './pages/TermsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -105,6 +106,7 @@ const AppContent = () => {
             <Route path="/order-fail" element={<OrderFail />} />
             <Route path="/orders" element={<OrdersPage />} />
             <Route path="/brand-products/:brandName" element={<BrandProductsPage />} />
+            <Route path="/terms" element={<TermsPage />} />
             
             {/* Admin Routes */}
             <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />

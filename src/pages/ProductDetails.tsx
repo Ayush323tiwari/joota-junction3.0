@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { productsAPI } from '../services/api';
 import { Product } from '../types';
@@ -18,29 +18,21 @@ const ProductDetails: React.FC = () => {
   const { user } = useAuth();
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [selectedImage, setSelectedImage] = useState<number>(0);
-  const [reviews, setReviews] = useState<any[]>([]);
-  const [reviewsLoading, setReviewsLoading] = useState(true);
 
   const { data: product, isLoading, error } = useQuery<Product>({
     queryKey: ['product', productId],
     queryFn: () => productsAPI.getProductById(productId || '')
   });
 
-  useEffect(() => {
-    const fetchReviews = async () => {
-      setReviewsLoading(true);
-      try {
-        const response = await fetch(`http://localhost:5001/api/reviews/${productId}`);
-        const data = await response.json();
-        setReviews(data);
-      } catch (err) {
-        setReviews([]);
-      } finally {
-        setReviewsLoading(false);
-      }
-    };
-    if (productId) fetchReviews();
-  }, [productId]);
+  const { data: reviewsData, isLoading: reviewsLoading } = useQuery({
+    queryKey: ['reviews', productId],
+    queryFn: async () => {
+      const response = await fetch(`http://localhost:5001/api/reviews/${productId}`);
+      const data = await response.json();
+      return data.reviews || [];
+    },
+    enabled: !!productId
+  });
 
   const handleAddToCart = () => {
     if (!user) {
@@ -135,7 +127,7 @@ const ProductDetails: React.FC = () => {
           {/* Main Image */}
           <div className="aspect-square rounded-lg overflow-hidden bg-white flex items-center justify-center w-full max-w-md mx-auto">
             <img
-              src={product.images[selectedImage]}
+              src={product.images[selectedImage]?.startsWith('/uploads/products') ? `http://localhost:5001${product.images[selectedImage]}` : product.images[selectedImage]}
               alt={product.name}
               className="w-full h-full object-contain"
               style={{ maxHeight: 450, maxWidth: 450 }}
@@ -153,7 +145,7 @@ const ProductDetails: React.FC = () => {
                 style={{ background: '#fff' }}
               >
                 <img
-                  src={img}
+                  src={img.startsWith('/uploads/products') ? `http://localhost:5001${img}` : img}
                   alt={`${product.name} ${idx + 1}`}
                   className="w-full h-full object-cover"
                 />
@@ -197,8 +189,16 @@ const ProductDetails: React.FC = () => {
           </Button>
 
           <div>
-            <h2 className="text-sm font-medium text-gray-900">Description</h2>
-            <p className="mt-2 text-gray-600">{product.description}</p>
+            <h2 className="text-sm font-medium text-gray-900">Shipping & Returns</h2>
+            <div className="mt-2 space-y-3 text-gray-600">
+              <p>Free shipping on all orders over ₹2,000. Standard delivery within 3-5 business days.</p>
+              <p>Easy 30-day returns. If you're not completely satisfied with your purchase, you can return it within 30 days of delivery.</p>
+              <p className="text-sm">
+                <Link to="/terms" className="text-black hover:underline font-medium">
+                  View our full shipping and returns policy →
+                </Link>
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -251,15 +251,15 @@ const ProductDetails: React.FC = () => {
         <h2 className="text-2xl font-bold mb-4 text-gray-900">Product Reviews</h2>
         {reviewsLoading ? (
           <div>Loading reviews...</div>
-        ) : reviews.length === 0 ? (
+        ) : !reviewsData || reviewsData.length === 0 ? (
           <div className="text-gray-500">No reviews yet.</div>
         ) : (
           <div className="space-y-6">
-            {reviews.map((review, idx) => (
+            {reviewsData.map((review, idx) => (
               <div key={idx} className="border-b border-gray-100 pb-6 mb-6">
                 <div className="flex items-center mb-2">
                   <div>
-                    <div className="font-semibold text-gray-900">{review.userId.name}</div>
+                    <div className="font-semibold text-gray-900">{review.user?.name || 'Anonymous'}</div>
                     <div className="flex items-center text-yellow-500">
                       {[1,2,3,4,5].map(star => (
                         <span key={star}>{review.rating >= star ? '★' : '☆'}</span>
@@ -274,7 +274,7 @@ const ProductDetails: React.FC = () => {
                     {review.images.map((img: string, i: number) => (
                       <img
                         key={i}
-                        src={`http://localhost:5001${img.startsWith('/') ? img : '/' + img}`}
+                        src={img.startsWith('/uploads/reviews') ? `http://localhost:5001${img}` : img}
                         alt="review"
                         className="w-24 h-24 object-cover rounded-lg border"
                       />
