@@ -3,6 +3,7 @@ import { ShoppingCart, Heart } from 'lucide-react';
 import { Product } from '../types';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 // Indian currency formatter
 const formatIndianCurrency = (amount: number) => {
@@ -26,6 +27,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onProductClick, onAu
   const [isHovered, setIsHovered] = useState(false);
   const { addToCart } = useCart();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -81,14 +83,16 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onProductClick, onAu
   return (
     <div
       className="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer relative overflow-hidden"
-      onClick={() => onProductClick(product)}
+      onClick={() => {
+        navigate(`/product/${product._id || product.id}`);
+      }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Image Container */}
       <div className="relative aspect-square overflow-hidden bg-gray-50">
         <img
-          src={product.images[0]}
+          src={product.images[0] && product.images[0].startsWith('/uploads/products') ? `http://localhost:5001${product.images[0]}` : product.images[0]}
           alt={product.name}
           className={`w-full h-full object-cover transition-transform duration-500 ${
             isHovered ? 'scale-110' : 'scale-100'

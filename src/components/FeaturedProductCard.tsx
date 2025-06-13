@@ -3,6 +3,7 @@ import { ShoppingCart, Heart, TrendingUp } from 'lucide-react';
 import { Product } from '../types';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const formatIndianCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-IN', {
@@ -25,6 +26,7 @@ const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({ product, onPr
   const [isHovered, setIsHovered] = useState(false);
   const { addToCart } = useCart();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -80,7 +82,9 @@ const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({ product, onPr
   return (
     <div
       className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer relative overflow-hidden border border-gray-100"
-      onClick={() => onProductClick(product)}
+      onClick={() => {
+        navigate(`/product/${product._id || product.id}`);
+      }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >

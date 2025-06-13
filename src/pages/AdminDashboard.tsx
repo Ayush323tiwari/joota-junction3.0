@@ -222,15 +222,25 @@ const AdminDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
-  const [newProduct, setNewProduct] = useState({
-    name: '',
-    brand: '',
-    price: '',
-    category: '',
-    image: '',
-    sizes: '',
-    description: '',
-  });
+  const [newProduct, setNewProduct] = useState<{
+    name: string;
+    brand: string;
+    price: string;
+    category: string;
+    images: FileList | null;
+    sizes: string;
+    description: string;
+  }>(
+    {
+      name: '',
+      brand: '',
+      price: '',
+      category: '',
+      images: null,
+      sizes: '',
+      description: '',
+    }
+  );
   const [newBrand, setNewBrand] = useState<{
     name: string;
     description: string;
@@ -427,30 +437,34 @@ const AdminDashboard: React.FC = () => {
   const handleAddProduct = async () => {
     try {
       const token = localStorage.getItem('adminToken');
+      const formData = new FormData();
+      formData.append('name', newProduct.name);
+      formData.append('brand', newProduct.brand);
+      formData.append('price', newProduct.price);
+      formData.append('category', newProduct.category);
+      formData.append('description', newProduct.description);
+      // Sizes as JSON array
+      formData.append('sizes', JSON.stringify(newProduct.sizes.split(',').map(s => s.trim()).filter(Boolean)));
+      // Images
+      if (newProduct.images && newProduct.images.length > 0) {
+        Array.from(newProduct.images).forEach((file) => {
+          formData.append('images', file);
+        });
+      }
       const response = await fetch('http://localhost:5001/api/admin/products', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          name: newProduct.name,
-          brand: newProduct.brand,
-          price: parseFloat(newProduct.price),
-          category: newProduct.category,
-          images: newProduct.image.split(',').map(url => url.trim()).filter(Boolean),
-          description: newProduct.description,
-          sizes: newProduct.sizes.split(',').map(s => parseInt(s.trim())).filter(s => !isNaN(s))
-        }),
+        body: formData
       });
-
       if (response.ok) {
         setNewProduct({
           name: '',
           brand: '',
           price: '',
           category: '',
-          image: '',
+          images: null,
           sizes: '',
           description: '',
         });
@@ -463,49 +477,27 @@ const AdminDashboard: React.FC = () => {
 
   const handleUpdateProduct = async () => {
     if (!editingProduct) return;
-    
     try {
       const token = localStorage.getItem('adminToken');
-      
-      // Get the current product to preserve existing stock
-      const currentProduct = products.find(p => p._id === editingProduct._id);
-      if (!currentProduct) return;
-      
-      // Preserve existing sizes and stock, only update if new sizes are provided
-      let updatedSizes = currentProduct.sizes;
-      if (newProduct.sizes.trim()) {
-        const newSizeNumbers = newProduct.sizes.split(',').map(s => parseInt(s.trim())).filter(s => !isNaN(s));
-        
-        // Create a map of existing stock by size
-        const existingStockMap = new Map();
-        currentProduct.sizes.forEach(size => {
-          existingStockMap.set(size.size, size.stock);
+      const formData = new FormData();
+      formData.append('name', newProduct.name);
+      formData.append('brand', newProduct.brand);
+      formData.append('price', newProduct.price);
+      formData.append('category', newProduct.category);
+      formData.append('description', newProduct.description);
+      formData.append('sizes', JSON.stringify(newProduct.sizes.split(',').map(s => s.trim()).filter(Boolean)));
+      if (newProduct.images && newProduct.images.length > 0) {
+        Array.from(newProduct.images).forEach((file) => {
+          formData.append('images', file);
         });
-        
-        // Create new sizes array preserving existing stock
-        updatedSizes = newSizeNumbers.map(size => ({
-          size: size,
-          stock: existingStockMap.get(size) || 0 // Preserve existing stock, default to 0 for new sizes
-        }));
       }
-      
       const response = await fetch(`http://localhost:5001/api/admin/products/${editingProduct._id}`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          name: newProduct.name,
-          brand: newProduct.brand,
-          price: parseFloat(newProduct.price),
-          category: newProduct.category,
-          images: newProduct.image.split(',').map(url => url.trim()).filter(Boolean),
-          description: newProduct.description,
-          sizes: updatedSizes
-        }),
+        body: formData
       });
-
       if (response.ok) {
         setEditingProduct(null);
         setNewProduct({
@@ -513,7 +505,7 @@ const AdminDashboard: React.FC = () => {
           brand: '',
           price: '',
           category: '',
-          image: '',
+          images: null,
           sizes: '',
           description: '',
         });
@@ -531,7 +523,7 @@ const AdminDashboard: React.FC = () => {
       brand: product.brand,
       price: product.price.toString(),
       category: product.category,
-      image: product.images[0] || '',
+      images: null, // always reset images on edit
       sizes: product.sizes.map(s => s.size).join(', '),
       description: product.description,
     });
@@ -544,7 +536,7 @@ const AdminDashboard: React.FC = () => {
       brand: '',
       price: '',
       category: '',
-      image: '',
+      images: null,
       sizes: '',
       description: '',
     });
@@ -1159,8 +1151,8 @@ const AdminDashboard: React.FC = () => {
                         <TableRow key={order._id} className="hover:bg-gray-50">
                           <TableCell className="px-2 sm:px-6">
                             <div>
-                              <div className="font-medium text-xs sm:text-sm">{order.user.name}</div>
-                              <div className="text-xs text-gray-600 hidden sm:block">{order.user.email}</div>
+                              <div className="font-medium text-xs sm:text-sm">{order.user && order.user.name ? order.user.name : 'Unknown'}</div>
+                              <div className="text-xs text-gray-600 hidden sm:block">{order.user && order.user.email ? order.user.email : 'Unknown'}</div>
                             </div>
                           </TableCell>
                           <TableCell className="font-semibold text-green-600 text-xs sm:text-sm px-2 sm:px-6">{formatIndianCurrency(order.totalPrice)}</TableCell>
@@ -1265,10 +1257,14 @@ const AdminDashboard: React.FC = () => {
                           <TableRow key={product._id} className="hover:bg-gray-50">
                             <TableCell className="px-2 sm:px-6">
                               <img 
-                                src={product.images[0] || 'https://via.placeholder.com/40'} 
+                                src={product.images[0] ? (product.images[0].startsWith('/uploads/products') ? `http://localhost:5001${product.images[0]}` : product.images[0]) : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMjAgMTVDMjIuNzYxNCAxNSAyNSAxNy4yMzg2IDI1IDIwQzI1IDIyLjc2MTQgMjIuNzYxNCAyNSAyMCAyNUMxNy4yMzg2IDI1IDE1IDIyLjc2MTQgMTUgMjBDMTUgMTcuMjM4NiAxNy4yMzg2IDE1IDIwIDE1WiIgZmlsbD0iIzk0OTY5RiIvPjxwYXRoIGQ9Ik0yMCAyN0MyMy4zMTM3IDI3IDI2IDI0LjMxMzcgMjYgMjFIMTRDMTQgMjQuMzEzNyAxNi42ODYzIDI3IDIwIDI3WiIgZmlsbD0iIzk0OTY5RiIvPjwvc3ZnPg=='} 
                                 alt={product.name} 
                                 className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-md"
-                  />
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMjAgMTVDMjIuNzYxNCAxNSAyNSAxNy4yMzg2IDI1IDIwQzI1IDIyLjc2MTQgMjIuNzYxNCAyNSAyMCAyNUMxNy4yMzg2IDI1IDE1IDIyLjc2MTQgMTUgMjBDMTUgMTcuMjM4NiAxNy4yMzg2IDE1IDIwIDE1WiIgZmlsbD0iIzk0OTY5RiIvPjxwYXRoIGQ9Ik0yMCAyN0MyMy4zMTM3IDI3IDI2IDI0LjMxMzcgMjYgMjFIMTRDMTQgMjQuMzEzNyAxNi42ODYzIDI3IDIwIDI3WiIgZmlsbD0iIzk0OTY5RiIvPjwvc3ZnPg==';
+                                }}
+                              />
                             </TableCell>
                             <TableCell className="font-medium text-xs sm:text-sm px-2 sm:px-6">
                               <div>
@@ -1319,7 +1315,7 @@ const AdminDashboard: React.FC = () => {
                   <Button 
                     onClick={() => {
                       setEditingProduct(null);
-                      setNewProduct({ name: '', brand: '', price: '', category: '', image: '', sizes: '', description: '' });
+                      setNewProduct({ name: '', brand: '', price: '', category: '', images: null, sizes: '', description: '' });
                       setShowProductModal(true);
                     }}
                     className="bg-white text-blue-600 hover:bg-gray-100 text-xs sm:text-sm px-3 sm:px-4 py-2 h-8 sm:h-9"
@@ -1347,9 +1343,13 @@ const AdminDashboard: React.FC = () => {
                         <TableRow key={product._id} className="hover:bg-gray-50">
                           <TableCell className="px-2 sm:px-6">
                             <img 
-                              src={product.images[0] || 'https://via.placeholder.com/40'} 
+                              src={product.images[0] ? (product.images[0].startsWith('/uploads/products') ? `http://localhost:5001${product.images[0]}` : product.images[0]) : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMjAgMTVDMjIuNzYxNCAxNSAyNSAxNy4yMzg2IDI1IDIwQzI1IDIyLjc2MTQgMjIuNzYxNCAyNSAyMCAyNUMxNy4yMzg2IDI1IDE1IDIyLjc2MTQgMTUgMjBDMTUgMTcuMjM4NiAxNy4yMzg2IDE1IDIwIDE1WiIgZmlsbD0iIzk0OTY5RiIvPjxwYXRoIGQ9Ik0yMCAyN0MyMy4zMTM3IDI3IDI2IDI0LjMxMzcgMjYgMjFIMTRDMTQgMjQuMzEzNyAxNi42ODYzIDI3IDIwIDI3WiIgZmlsbD0iIzk0OTY5RiIvPjwvc3ZnPg=='} 
                               alt={product.name} 
                               className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-md"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMjAgMTVDMjIuNzYxNCAxNSAyNSAxNy4yMzg2IDI1IDIwQzI1IDIyLjc2MTQgMjIuNzYxNCAyNSAyMCAyNUMxNy4yMzg2IDI1IDE1IDIyLjc2MTQgMTUgMjBDMTUgMTcuMjM4NiAxNy4yMzg2IDE1IDIwIDE1WiIgZmlsbD0iIzk0OTY5RiIvPjxwYXRoIGQ9Ik0yMCAyN0MyMy4zMTM3IDI3IDI2IDI0LjMxMzcgMjYgMjFIMTRDMTQgMjQuMzEzNyAxNi42ODYzIDI3IDIwIDI3WiIgZmlsbD0iIzk0OTY5RiIvPjwvc3ZnPg==';
+                              }}
                             />
                           </TableCell>
                           <TableCell className="font-medium text-xs sm:text-sm px-2 sm:px-6">
@@ -1515,8 +1515,8 @@ const AdminDashboard: React.FC = () => {
                           <TableCell className="font-mono text-xs sm:text-sm px-2 sm:px-6">#{order._id.slice(-6)}</TableCell>
                           <TableCell className="px-2 sm:px-6">
                             <div>
-                              <div className="font-medium text-xs sm:text-sm">{order.user.name}</div>
-                              <div className="text-xs text-gray-600 hidden sm:block">{order.user.email}</div>
+                              <div className="font-medium text-xs sm:text-sm">{order.user && order.user.name ? order.user.name : 'Unknown'}</div>
+                              <div className="text-xs text-gray-600 hidden sm:block">{order.user && order.user.email ? order.user.email : 'Unknown'}</div>
                             </div>
                           </TableCell>
                           <TableCell className="font-semibold text-green-600 text-xs sm:text-sm px-2 sm:px-6">{formatIndianCurrency(order.totalPrice)}</TableCell>
@@ -2041,10 +2041,12 @@ const AdminDashboard: React.FC = () => {
               value={newProduct.category}
               onChange={(e) => setNewProduct({...newProduct, category: e.target.value})}
             />
-            <Input
-              placeholder="Image URLs (comma separated)"
-              value={newProduct.image}
-              onChange={(e) => setNewProduct({...newProduct, image: e.target.value})}
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={e => setNewProduct({ ...newProduct, images: e.target.files })}
+              className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none"
             />
             <Input
               placeholder="Sizes (comma separated)"

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Package, Clock, Truck, CheckCircle, XCircle, MapPin, CreditCard, Calendar } from 'lucide-react';
+import { Package, Clock, Truck, CheckCircle, XCircle, MapPin, CreditCard, Calendar, Star } from 'lucide-react';
 import Header from '../components/Header';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../components/ui/dialog';
 
 interface OrderItem {
   product: {
@@ -44,6 +45,13 @@ const OrdersPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [reviewModal, setReviewModal] = useState<{orderId: string, productId: string} | null>(null);
+  const [reviewImages, setReviewImages] = useState<File[]>([]);
+  const [reviewMessage, setReviewMessage] = useState('');
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
+  const [reviewSuccess, setReviewSuccess] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -182,6 +190,39 @@ const OrdersPage: React.FC = () => {
     });
   };
 
+  const handleReviewSubmit = async () => {
+    if (!reviewModal) return;
+    setReviewLoading(true);
+    setReviewError(null);
+    try {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      formData.append('productId', reviewModal.productId);
+      formData.append('orderId', reviewModal.orderId);
+      formData.append('message', reviewMessage);
+      formData.append('rating', reviewRating.toString());
+      reviewImages.forEach((file) => formData.append('images', file));
+      const response = await fetch('http://localhost:5001/api/reviews', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to submit review');
+      }
+      setReviewSuccess(true);
+      setReviewModal(null);
+      setReviewImages([]);
+      setReviewMessage('');
+      setReviewRating(0);
+    } catch (err: any) {
+      setReviewError(err.message || 'Failed to submit review');
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -306,6 +347,14 @@ const OrdersPage: React.FC = () => {
                         )}
                         <div className="text-right flex-shrink-0">
                           <p className="font-medium text-gray-900 text-sm sm:text-base">{formatCurrency(item.price)}</p>
+                          {order.status === 'delivered' && item.product && (
+                            <button
+                              className="mt-2 bg-black text-white px-4 py-2 rounded-lg text-xs font-semibold shadow-sm hover:bg-gray-900 transition-colors border border-black focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
+                              onClick={() => setReviewModal({ orderId: order._id, productId: item.product._id })}
+                            >
+                              Review
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -350,6 +399,30 @@ const OrdersPage: React.FC = () => {
           </div>
         )}
       </div>
+      <Dialog open={!!reviewModal} onOpenChange={() => setReviewModal(null)}>
+        <DialogContent>
+          <DialogTitle>Write a Review</DialogTitle>
+          <DialogDescription>Share your experience with this product. Please rate, write a message, and upload images if you wish.</DialogDescription>
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md mx-auto">
+            <label className="block mb-2 font-medium">Rating</label>
+            <div className="flex items-center mb-4">
+              {[1,2,3,4,5].map((star) => (
+                <button key={star} type="button" onClick={() => setReviewRating(star)}>
+                  <Star className={`h-6 w-6 ${reviewRating >= star ? 'text-yellow-400' : 'text-gray-300'}`} fill={reviewRating >= star ? '#facc15' : 'none'} />
+                </button>
+              ))}
+            </div>
+            <label className="block mb-2 font-medium">Message</label>
+            <textarea className="w-full border rounded p-2 mb-4" rows={3} value={reviewMessage} onChange={e => setReviewMessage(e.target.value)} />
+            <label className="block mb-2 font-medium">Upload Images</label>
+            <input type="file" multiple accept="image/*" onChange={e => setReviewImages(Array.from(e.target.files || []))} className="mb-4" />
+            {reviewError && <div className="text-red-600 mb-2">{reviewError}</div>}
+            <button className="bg-black text-white px-4 py-2 rounded-lg font-semibold shadow-sm hover:bg-gray-900 transition-colors border border-black focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 w-full" onClick={handleReviewSubmit} disabled={reviewLoading}>
+              {reviewLoading ? 'Submitting...' : 'Submit Review'}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

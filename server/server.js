@@ -129,6 +129,7 @@ const orderRoutes = require('./routes/orders');
 const adminRoutes = require('./routes/admin');
 const categoryRoutes = require('./routes/categories');
 const brandRoutes = require('./routes/brands');
+const reviewsRouter = require('./routes/reviews');
 
 // Mount routes
 app.use('/api/auth', authRoutes);
@@ -137,6 +138,8 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/brands', brandRoutes);
+app.use('/api/reviews', reviewsRouter);
+app.use('/uploads/reviews', express.static('uploads/reviews'));
 
 // Basic route for testing
 app.get('/api/test', (req, res) => {
